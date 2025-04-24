@@ -70,7 +70,7 @@ def update_house_points(house, pts):
             f.write(f"{k} - {pts_map[k]}\n")
 
 def run_match(w1, w2):
-    out = subprocess.run(['pmars','-r','1000', '-P', w1, w2],
+    out = subprocess.run(['pmars','-r','1000', '-f', w1, w2],
                          capture_output=True, text=True).stdout.splitlines()
     return out[-1] if out else ""
 

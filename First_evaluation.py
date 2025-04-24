@@ -41,7 +41,7 @@ def run_make(student_folder, target=None, timeout=TIMEOUT_SECONDS):
 
 def run_corewar_against_basic(warrior_file, basic_warrior):
     basic_wrior_path = os.path.join(BASIC_DIR, basic_warrior)
-    cmd = ['pmars', '-r', '500', '-P', warrior_file, basic_wrior_path]
+    cmd = ['pmars', '-r', '500', '-f', warrior_file, basic_wrior_path]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True)
         lines = proc.stdout.strip().splitlines()
@@ -113,6 +113,7 @@ def process_student_submission(tarball, house_num, env_var):
     student_folder = os.path.join(house_folder, f"{student_name}")
     os.makedirs(student_folder, exist_ok=True)
 
+
     with open(os.path.join(house_folder, "submissions.txt"), "a") as f:
         f.write(f"{student_name}\n")
 
@@ -127,16 +128,18 @@ def process_student_submission(tarball, house_num, env_var):
         print(f"Make timed out for {student_name}'s warrior1.")
         score1 = 0
         det1 = "Warrior1 build timed out after 30 seconds.\n"
-        open(warrior1_path, 'w').close()
+        open(warrior1_copy_path, 'w').close()
     elif not os.path.exists(warrior1_path) or os.path.getsize(warrior1_path) == 0:
+        print("Path exists?... " + str(os.path.exists(warrior1_path)))
+        print("Path size... " + str(os.path.getsize(warrior1_path)))
+        print("Warrior path is... " + str(warrior1_path))
         print(f"Warrior1 missing/empty for {student_name}.")
         score1 = 0
         det1 = "Warrior1 was missing or empty after build.\n"
         open(warrior1_path, 'w').close()
     else:
-        score1, det1 = evaluate_warrior(student_folder, 'chooseyourfighter.red', student_name)
         shutil.copy(warrior1_path, warrior1_copy_path)
-        subprocess.run(['make', 'clean'], cwd=student_folder)
+        score1, det1 = evaluate_warrior(student_folder, 'chooseyourfighter.red', student_name)
 
     total = score1
     details = f"Warrior1 Evaluation:\n{det1}\n"
@@ -172,10 +175,9 @@ def process_student_submission(tarball, house_num, env_var):
                     details += "\nWarrior1 and Warrior2 are identical. Total score halved.\n"
                 else:
                     details += "\nWarrior1 and Warrior2 are different. Full score retained.\n"
-            os.remove(warrior1_copy_path)
 
     del os.environ[env_var]
-
+    time.sleep(2)
     update_individual_score(student_name, total, details)
 
     with open(FINAL_RESULTS_CSV, 'a', newline='') as frc:
